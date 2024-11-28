@@ -11,18 +11,11 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
 
 func main() {
-
-	//Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
 
 	srv, err := initGoogleDrive()
 	if err != nil {
