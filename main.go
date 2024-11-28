@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -21,6 +22,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to create Drive service: %v", err)
 	}
+
+	go func() {
+		startAPIServer()
+	}()
 
 	tel := initTelegram()
 	sendMessage(tel, srv)
@@ -79,8 +84,18 @@ func sendMessage(bot *tgbotapi.BotAPI, srv *drive.Service) {
 
 	var mainChatID int64 = 0
 
+	hourStr := os.Getenv("HOUR")
+	hour, err := strconv.Atoi(hourStr)
+	if err != nil {
+		fmt.Println("Error converting string to int:", err)
+		return
+	}
+
+	// Convert hour to time.Duration
+	duration := time.Duration(hour) * time.Hour
+
 	go func() {
-		ticker := time.NewTicker(24 * time.Hour)
+		ticker := time.NewTicker(duration)
 		defer ticker.Stop()
 
 		for range ticker.C {
@@ -180,4 +195,14 @@ func downloadFile(srv *drive.Service, fileId string, downloadDir string, dowload
 
 	fmt.Printf("Downloaded '%s' successfully to %s\n", dowloadFile, outputPath)
 	return nil
+}
+
+func startAPIServer() {
+	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	})
+
+	log.Println("API server running on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
